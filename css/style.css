@@ -1,0 +1,940 @@
+/* ===== Consolidated Stylesheet ===== */
+
+/* ==========================================
+   From css/styles.css
+   ========================================== */
+/* ===== Hardware-Accelerated GPU Timer Fullscreen Animations ===== */
+@keyframes timerFsEnter {
+    from {
+        opacity: 0;
+        transform: scale(0.97) translate3d(0, 0, 0);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1) translate3d(0, 0, 0);
+    }
+}
+
+@keyframes timerFsContentEnter {
+    from {
+        opacity: 0;
+        transform: scale(0.96) translateY(8px) translate3d(0, 0, 0);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0) translate3d(0, 0, 0);
+    }
+}
+
+@keyframes timerFsExit {
+    from {
+        opacity: 1;
+        transform: scale(1) translate3d(0, 0, 0);
+    }
+
+    to {
+        opacity: 0;
+        transform: scale(0.97) translate3d(0, 0, 0);
+    }
+}
+
+@keyframes timerFsContentExit {
+    from {
+        opacity: 1;
+        transform: scale(1) translateY(0) translate3d(0, 0, 0);
+    }
+
+    to {
+        opacity: 0;
+        transform: scale(0.96) translateY(8px) translate3d(0, 0, 0);
+    }
+}
+
+/* Timer Fullscreen Mode (Ultra-Smooth Hardware-Accelerated) */
+#timer-active-panel.timer-fullscreen {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    z-index: 99999 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+    padding: 1.5rem !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+    background: #f8fafc;
+    border: none !important;
+    box-shadow: none !important;
+    will-change: transform, opacity;
+    backface-visibility: hidden;
+    transform: translate3d(0, 0, 0);
+    animation: timerFsEnter 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Exit animation class */
+#timer-active-panel.timer-fs-exiting {
+    animation: timerFsExit 0.18s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* Content animation inside fullscreen */
+#timer-active-panel.timer-fullscreen>.relative {
+    will-change: transform, opacity;
+    backface-visibility: hidden;
+    transform: translate3d(0, 0, 0);
+    animation: timerFsContentEnter 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+#timer-active-panel.timer-fs-exiting>.relative {
+    animation: timerFsContentExit 0.15s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* Fullscreen Toggle Button Hardware Enhancements & Icon Rotation */
+#timer-btn-fullscreen {
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease !important;
+    will-change: transform;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+}
+
+#timer-btn-fullscreen:hover {
+    transform: scale(1.1) translate3d(0, 0, 0);
+}
+
+#timer-btn-fullscreen:active {
+    transform: scale(0.9) translate3d(0, 0, 0);
+}
+
+#timer-btn-fullscreen svg {
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: transform;
+}
+
+.timer-fullscreen #timer-btn-fullscreen svg {
+    transform: rotate(180deg);
+}
+
+/* Clean 3-Thing Fullscreen Layout Rules */
+.timer-fullscreen #timer-fs-actions {
+    display: flex !important;
+    position: fixed !important;
+    top: max(1rem, env(safe-area-inset-top)) !important;
+    right: max(1rem, env(safe-area-inset-right)) !important;
+    z-index: 99999 !important;
+}
+
+.timer-fullscreen #timer-panel-header-bar,
+.timer-fullscreen #timer-mode-switcher,
+.timer-fullscreen #timer-subject-select-container,
+.timer-fullscreen #timer-alarm-container,
+.timer-fullscreen #timer-presets-container,
+.timer-fullscreen #timer-control-buttons-bar {
+    display: none !important;
+}
+
+/* Program-wise Dropdown Optgroup Styling */
+#timer-subject-select optgroup {
+    background-color: #020617;
+    color: #3b82f6;
+    font-weight: 800;
+    font-size: 0.75rem;
+    padding: 6px 8px;
+}
+
+#timer-subject-select option {
+    background-color: #0f172a;
+    color: #f8fafc;
+    font-weight: 600;
+    font-size: 0.85rem;
+    padding: 6px 12px;
+}
+
+.light #timer-subject-select optgroup,
+html:not(.dark) #timer-subject-select optgroup {
+    background-color: #f1f5f9;
+    color: #2563eb;
+}
+
+.light #timer-subject-select option,
+html:not(.dark) #timer-subject-select option {
+    background-color: #ffffff;
+    color: #0f172a;
+}
+
+@media (min-width: 640px) {
+    #timer-active-panel.timer-fullscreen {
+        padding: 3rem !important;
+    }
+}
+
+@media (min-width: 1024px) {
+    #timer-active-panel.timer-fullscreen {
+        padding: 4rem !important;
+    }
+}
+
+.dark #timer-active-panel.timer-fullscreen,
+#timer-active-panel.timer-fullscreen.dark {
+    background: #0f172a;
+}
+
+@media (prefers-color-scheme: dark) {
+    #timer-active-panel.timer-fullscreen {
+        background: #0f172a;
+    }
+}
+
+/* Panel is moved to document.body during fullscreen, so no #page-timer hacks needed */
+
+/* Hide scrollbars and lock body during fullscreen active mode */
+body.timer-fullscreen-active {
+    overflow: hidden !important;
+    touch-action: none;
+}
+
+/* Remove bounding card style during fullscreen mode */
+.timer-fullscreen .relative.z-10.w-full.max-w-md {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 1rem;
+    max-width: 30rem !important;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.dark .timer-fullscreen .relative.z-10.w-full.max-w-md,
+#timer-active-panel.timer-fullscreen.dark .relative.z-10.w-full.max-w-md {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+@media (prefers-color-scheme: dark) {
+    .timer-fullscreen .relative.z-10.w-full.max-w-md {
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+    }
+}
+
+/* ===== Fullscreen Clock Sizes ===== */
+/* Phone (default) — keep same as normal view */
+.timer-fullscreen #timer-clock-container {
+    width: 15rem !important;
+    height: 15rem !important;
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Tablet */
+@media (min-width: 640px) {
+    .timer-fullscreen #timer-clock-container {
+        width: 20rem !important;
+        height: 20rem !important;
+    }
+}
+
+/* Desktop — much bigger */
+@media (min-width: 1024px) {
+    .timer-fullscreen #timer-clock-container {
+        width: 24rem !important;
+        height: 24rem !important;
+    }
+
+    .timer-fullscreen .relative.z-10.w-full.max-w-md {
+        max-width: 40rem !important;
+        gap: 2rem;
+    }
+}
+
+/* Large desktop */
+@media (min-width: 1280px) {
+    .timer-fullscreen #timer-clock-container {
+        width: 28rem !important;
+        height: 28rem !important;
+    }
+}
+
+/* ===== Fullscreen Clock Text Sizes ===== */
+.timer-fullscreen #timer-clock-text {
+    font-size: 2.5rem !important;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    font-weight: 900;
+    letter-spacing: 0.05em;
+    color: #0f172a;
+    transition: font-size 0.3s ease;
+}
+
+.dark .timer-fullscreen #timer-clock-text,
+#timer-active-panel.timer-fullscreen.dark #timer-clock-text {
+    color: #ffffff;
+}
+
+@media (prefers-color-scheme: dark) {
+    .timer-fullscreen #timer-clock-text {
+        color: #ffffff;
+    }
+}
+
+/* Tablet */
+@media (min-width: 640px) {
+    .timer-fullscreen #timer-clock-text {
+        font-size: 3.5rem !important;
+    }
+}
+
+/* Desktop */
+@media (min-width: 1024px) {
+    .timer-fullscreen #timer-clock-text {
+        font-size: 4.5rem !important;
+        letter-spacing: 0.06em;
+    }
+}
+
+/* Large desktop */
+@media (min-width: 1280px) {
+    .timer-fullscreen #timer-clock-text {
+        font-size: 5rem !important;
+    }
+}
+
+/* Status text bigger on desktop fullscreen */
+.timer-fullscreen #timer-status-text {
+    font-size: 9px;
+    margin-top: 0.5rem;
+}
+
+@media (min-width: 1024px) {
+    .timer-fullscreen #timer-status-text {
+        font-size: 11px !important;
+        letter-spacing: 0.15em;
+        margin-top: 0.75rem;
+    }
+}
+
+.timer-fullscreen #timer-progress-ring {
+    filter: none !important;
+}
+
+/* Bigger control buttons in fullscreen on desktop */
+.timer-fullscreen #timer-btn-toggle {
+    font-size: 0.75rem !important;
+}
+
+@media (min-width: 1024px) {
+    .timer-fullscreen #timer-btn-toggle {
+        font-size: 0.85rem !important;
+        padding: 1rem 3.5rem !important;
+        border-radius: 1.25rem;
+    }
+}
+
+.timer-fullscreen #timer-btn-save {
+    font-size: 0.75rem !important;
+}
+
+@media (min-width: 1024px) {
+    .timer-fullscreen #timer-btn-save {
+        font-size: 0.85rem !important;
+        padding: 1rem 2rem !important;
+        border-radius: 1.25rem;
+    }
+}
+
+.timer-fullscreen #timer-presets-container button {
+    font-size: 0.75rem !important;
+}
+
+/* Hide mode switcher, subject selector, presets, and reset button in fullscreen mode */
+.timer-fullscreen #timer-mode-switcher,
+.timer-fullscreen #timer-subject-select-container,
+.timer-fullscreen #timer-presets-container,
+.timer-fullscreen #timer-btn-reset {
+    display: none !important;
+}
+
+.timer-fullscreen .max-w-md {
+    max-width: 32rem !important;
+}
+
+@media (min-width: 1024px) {
+    .timer-fullscreen .max-w-md {
+        max-width: 42rem !important;
+    }
+}
+
+@keyframes pageEnter {
+    from {
+        opacity: 0;
+        transform: translateY(12px) scale(0.99);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.animate-page-enter {
+    animation: pageEnter 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes auraPulse {
+
+    0%,
+    100% {
+        opacity: 0.65;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 0.95;
+        transform: scale(1.04);
+    }
+}
+
+.animate-aura {
+    animation: auraPulse 4s ease-in-out infinite;
+}
+
+* {
+    -webkit-tap-highlight-color: transparent;
+    box-sizing: border-box;
+}
+
+/* Spectra Pulse mobile overflow fix — constrain canvas and prevent horizontal bleed */
+#page-spectra-analytics canvas {
+    max-width: 100%;
+    display: block;
+}
+
+#page-spectra-analytics {
+    max-width: 100vw;
+}
+
+/* Render layer stabilization to fix Chromium and Safari backdrop-filter scroll glitches */
+.sticky,
+#sys-content-priority div,
+#sys-content-priority div.flex {
+    transform: translate3d(0, 0, 0);
+    -webkit-transform: translate3d(0, 0, 0);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+    display: none;
+}
+
+.scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 10px;
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #334155;
+}
+
+/* Perfect Mobile Responsiveness Fixes */
+@media (max-width: 639px) {
+
+    input,
+    select,
+    textarea {
+        font-size: 16px !important;
+    }
+
+    /* Prevents iOS auto-zoom on inputs */
+}
+
+.touch-action-manipulation {
+    touch-action: manipulation;
+}
+
+/* Eliminates 300ms tap delay */
+
+
+/* ==========================================
+   From css/animations.css
+   ========================================== */
+/* css/animations.css */
+/* Verbatim extraction of inline animations from index.html */
+
+@keyframes premium-pulse {
+
+    0%,
+    100% {
+        transform: scale(1) translateY(0);
+        filter: drop-shadow(0 0 15px rgba(59, 130, 246, 0.35)) brightness(1);
+    }
+
+    50% {
+        transform: scale(1.04) translateY(-4px);
+        filter: drop-shadow(0 0 25px rgba(99, 102, 241, 0.65)) brightness(1.1);
+    }
+}
+
+.animate-premium-pulse {
+    animation: premium-pulse 2.2s ease-in-out infinite;
+}
+
+@keyframes shimmer-flow {
+    0% {
+        background-position: -200% 0;
+    }
+
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+.shimmer-progress {
+    background: linear-gradient(90deg, #3b82f6 0%, #6366f1 50%, #a855f7 100%);
+    background-size: 200% 100%;
+    animation: shimmer-flow 1.5s infinite linear;
+}
+
+
+/* ==========================================
+   From login.html Inline Styles
+   ========================================== */
+body {
+    font-family: 'Inter', sans-serif;
+}
+
+h1,
+h2 {
+    font-family: 'Outfit', sans-serif;
+}
+
+.glass-card {
+    background: rgba(30, 41, 59, 0.45);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+
+.glowing-input:focus {
+    box-shadow: 0 0 15px rgba(59, 130, 246, 0.25);
+}
+
+/* ===== Consolidated Stylesheet ===== */
+
+/* ==========================================
+   From css/styles.css
+   ========================================== */
+/* ===== Timer Fullscreen Entry/Exit Animations ===== */
+.gcm-chapter-block {
+    transition: transform 0.22s cubic-bezier(0.175, 0.885, 0.32, 1.275), filter 0.22s ease, opacity 0.22s ease;
+    transform-box: view-box;
+    transform-origin: 0px 0px;
+    cursor: pointer;
+}
+
+@media (hover: hover) {
+    .gcm-chapter-block:hover {
+        filter: brightness(1.18) saturate(1.1) drop-shadow(0 0 5px currentColor);
+        transform: scale(1.035);
+    }
+}
+
+.gcm-chapter-block:active {
+    transform: scale(0.98);
+}
+
+/* Select Option & Optgroup Colors Fix */
+select option,
+select optgroup {
+    background-color: #ffffff !important;
+    color: #1e293b !important;
+}
+
+.dark select option,
+.dark select optgroup {
+    background-color: #0f172a !important;
+    color: #f8fafc !important;
+}
+
+
+
+/* Touch interaction & responsive input adjustments */
+.touch-action-manipulation {
+    touch-action: manipulation;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+    height: 4px;
+    width: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(148, 163, 184, 0.4);
+    border-radius: 4px;
+}
+
+/* ===== Fiscal Mobile Optimization Styles ===== */
+@media (max-width: 639px) {
+    .fiscal-bottom-sheet {
+        position: fixed !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        border-bottom-left-radius: 0 !important;
+        border-bottom-right-radius: 0 !important;
+        max-height: 88vh !important;
+        animation: fiscalBottomSheetSlideUp 0.28s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    }
+}
+
+@keyframes fiscalBottomSheetSlideUp {
+    from {
+        transform: translateY(100%);
+        opacity: 0.8;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* ===== Chronograph Clock Flat "Painted On Wall" Theme Styling ===== */
+:root {
+    --chrono-tick-major: #0f172a;
+    --chrono-tick-minor: #64748b;
+    --chrono-text-number: #0f172a;
+
+    --chrono-subdial-tick-major: #0f172a;
+    --chrono-subdial-tick-minor: #94a3b8;
+    --chrono-subdial-text: #0f172a;
+    --chrono-subdial-hand: #0f172a;
+
+    --chrono-center-hub-outer: #0f172a;
+    --chrono-center-hub-inner: #2563eb;
+    --chrono-main-hand: #2563eb;
+    --chrono-main-hand-glow: rgba(37, 99, 235, 0.4);
+
+    --chrono-digital-hhmm: #0f172a;
+    --chrono-digital-ssms: #2563eb;
+}
+
+.dark, body.dark, html.dark {
+    --chrono-tick-major: #ffffff;
+    --chrono-tick-minor: #94a3b8;
+    --chrono-text-number: #ffffff;
+
+    --chrono-subdial-tick-major: #ffffff;
+    --chrono-subdial-tick-minor: #64748b;
+    --chrono-subdial-text: #ffffff;
+    --chrono-subdial-hand: #ffffff;
+
+    --chrono-center-hub-outer: #ffffff;
+    --chrono-center-hub-inner: #3b82f6;
+    --chrono-main-hand: #3b82f6;
+    --chrono-main-hand-glow: rgba(59, 130, 246, 0.7);
+
+    --chrono-digital-hhmm: #ffffff;
+    --chrono-digital-ssms: #3b82f6;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --chrono-tick-major: #ffffff;
+        --chrono-tick-minor: #94a3b8;
+        --chrono-text-number: #ffffff;
+
+        --chrono-subdial-tick-major: #ffffff;
+        --chrono-subdial-tick-minor: #64748b;
+        --chrono-subdial-text: #ffffff;
+        --chrono-subdial-hand: #ffffff;
+
+        --chrono-center-hub-outer: #ffffff;
+        --chrono-center-hub-inner: #3b82f6;
+        --chrono-main-hand: #3b82f6;
+        --chrono-main-hand-glow: rgba(59, 130, 246, 0.7);
+
+        --chrono-digital-hhmm: #ffffff;
+        --chrono-digital-ssms: #3b82f6;
+    }
+}
+
+#timer-clock-container {
+    background-color: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+#chrono-main-hand {
+    stroke: var(--chrono-main-hand);
+    filter: drop-shadow(0 0 5px var(--chrono-main-hand-glow));
+    will-change: transform;
+}
+
+#chrono-subdial-hand {
+    stroke: var(--chrono-subdial-hand);
+    filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.4));
+    will-change: transform;
+}
+
+#timer-clock-text-split span {
+    font-variant-numeric: tabular-nums;
+}
+
+/* ==========================================
+   Focus Analytics GitHub Box Chart Heatmap
+   ========================================== */
+
+@keyframes gold-pulse {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 0 8px rgba(245, 158, 11, 0.5), inset 0 0 4px rgba(254, 240, 138, 0.4);
+    }
+    50% {
+        transform: scale(1.08);
+        box-shadow: 0 0 16px rgba(245, 158, 11, 0.9), inset 0 0 8px rgba(254, 240, 138, 0.7);
+    }
+}
+
+.animate-gold-pulse {
+    animation: gold-pulse 2.5s ease-in-out infinite;
+}
+
+@keyframes gem-shimmer {
+    0% {
+        background-position: 0% 50%;
+        box-shadow: 0 0 10px rgba(168, 85, 247, 0.75), 0 0 16px rgba(6, 182, 212, 0.5);
+    }
+    50% {
+        background-position: 100% 50%;
+        box-shadow: 0 0 20px rgba(236, 72, 153, 0.95), 0 0 28px rgba(168, 85, 247, 0.8);
+    }
+    100% {
+        background-position: 0% 50%;
+        box-shadow: 0 0 10px rgba(168, 85, 247, 0.75), 0 0 16px rgba(6, 182, 212, 0.5);
+    }
+}
+
+.animate-gem-shimmer {
+    background-size: 200% 200% !important;
+    animation: gem-shimmer 3s ease infinite;
+}
+
+@keyframes diamond-shimmer {
+    0% {
+        background-position: 0% 50%;
+        box-shadow: 0 0 10px rgba(6, 182, 212, 0.8), 0 0 18px rgba(168, 85, 247, 0.6), inset 0 0 4px rgba(255, 255, 255, 0.8);
+    }
+    50% {
+        background-position: 100% 50%;
+        box-shadow: 0 0 22px rgba(56, 189, 248, 1.0), 0 0 30px rgba(236, 72, 153, 0.9), inset 0 0 8px rgba(255, 255, 255, 1.0);
+    }
+    100% {
+        background-position: 0% 50%;
+        box-shadow: 0 0 10px rgba(6, 182, 212, 0.8), 0 0 18px rgba(168, 85, 247, 0.6), inset 0 0 4px rgba(255, 255, 255, 0.8);
+    }
+}
+
+.animate-diamond-shimmer {
+    background-size: 200% 200% !important;
+    animation: diamond-shimmer 2.8s ease-in-out infinite;
+}
+
+.spectra-heatmap-box {
+    transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.spectra-heatmap-selected {
+    outline: 2.5px solid #a855f7 !important;
+    outline-offset: 1px !important;
+    box-shadow: 0 0 14px rgba(168, 85, 247, 0.95), 0 0 22px rgba(192, 132, 252, 0.75) !important;
+    z-index: 30 !important;
+    transform: scale(1.3) !important;
+    border-color: #c084fc !important;
+}
+
+.spectra-heatmap-box:hover {
+    transform: scale(1.3) z-index 10;
+    z-index: 20;
+    cursor: pointer;
+}
+
+.spectra-heatmap-scrollbar::-webkit-scrollbar {
+    height: 6px;
+}
+.spectra-heatmap-scrollbar::-webkit-scrollbar-track {
+    background: rgba(15, 23, 42, 0.05);
+    border-radius: 9999px;
+}
+.dark .spectra-heatmap-scrollbar::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+}
+.spectra-heatmap-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(99, 102, 241, 0.3);
+    border-radius: 9999px;
+}
+.spectra-heatmap-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(99, 102, 241, 0.6);
+}
+
+/* ==========================================
+   The 7 Officer Commitments Habit Radar Chart
+   ========================================== */
+#spectra-commitments-chart-wrapper svg {
+    width: 100%;
+    max-width: 720px;
+    height: auto;
+    margin: 0 auto;
+    display: block;
+    user-select: none;
+    touch-action: manipulation;
+}
+
+@media (max-width: 640px) {
+    #spectra-commitments-chart-wrapper svg {
+        max-width: 480px;
+    }
+}
+
+.commitment-cell {
+    transition: fill 0.18s ease, opacity 0.18s ease, filter 0.18s ease;
+    cursor: default;
+    stroke: none !important;
+}
+
+.commitment-checkbox-group rect,
+.commitment-checkbox-group path {
+    transition: fill 0.1s ease-out, stroke 0.1s ease-out;
+}
+
+.commitment-cell:hover {
+    opacity: 0.92;
+    filter: brightness(1.15) drop-shadow(0 0 6px rgba(99, 102, 241, 0.45));
+}
+
+/* Dynamic Dark/Light Theme Integration for Commitment Chart */
+#spectra-commitments-chart-wrapper .commitment-cell-active {
+    fill: #059669 !important;
+    stroke: none !important;
+}
+
+.dark #spectra-commitments-chart-wrapper .commitment-cell-active,
+html.dark #spectra-commitments-chart-wrapper .commitment-cell-active,
+body.dark #spectra-commitments-chart-wrapper .commitment-cell-active {
+    fill: #10b981 !important;
+    stroke: none !important;
+}
+
+#spectra-commitments-chart-wrapper .commitment-cell-inactive {
+    fill: rgb(190, 18, 60) !important;
+    stroke: none !important;
+}
+
+.dark #spectra-commitments-chart-wrapper .commitment-cell-inactive,
+html.dark #spectra-commitments-chart-wrapper .commitment-cell-inactive,
+body.dark #spectra-commitments-chart-wrapper .commitment-cell-inactive {
+    fill: rgb(190, 18, 60) !important;
+    stroke: none !important;
+}
+
+#spectra-commitments-chart-wrapper .commitment-cell-upcoming {
+    fill: none !important;
+    stroke: rgba(100, 116, 139, 0.35) !important;
+    stroke-width: 1.1px !important;
+}
+
+.dark #spectra-commitments-chart-wrapper .commitment-cell-upcoming,
+html.dark #spectra-commitments-chart-wrapper .commitment-cell-upcoming,
+body.dark #spectra-commitments-chart-wrapper .commitment-cell-upcoming {
+    fill: none !important;
+    stroke: rgba(255, 255, 255, 0.25) !important;
+    stroke-width: 1.1px !important;
+}
+
+.dark #spectra-commitments-chart-wrapper .commitment-leader-line,
+html.dark #spectra-commitments-chart-wrapper .commitment-leader-line,
+body.dark #spectra-commitments-chart-wrapper .commitment-leader-line {
+    stroke: rgba(255, 255, 255, 0.2) !important;
+}
+
+.dark #spectra-commitments-chart-wrapper .commitment-label-text,
+html.dark #spectra-commitments-chart-wrapper .commitment-label-text,
+body.dark #spectra-commitments-chart-wrapper .commitment-label-text {
+    fill: #e2e8f0 !important;
+}
+
+.dark #spectra-commitments-chart-wrapper .commitment-hub-circle,
+html.dark #spectra-commitments-chart-wrapper .commitment-hub-circle,
+body.dark #spectra-commitments-chart-wrapper .commitment-hub-circle {
+    fill: #0f172a !important;
+    stroke: rgba(255, 255, 255, 0.15) !important;
+}
+
+.dark #spectra-commitments-chart-wrapper .commitment-hub-text-sub,
+html.dark #spectra-commitments-chart-wrapper .commitment-hub-text-sub,
+body.dark #spectra-commitments-chart-wrapper .commitment-hub-text-sub {
+    fill: #94a3b8 !important;
+}
+
+.dark #spectra-commitments-chart-wrapper .commitment-hub-text-main,
+html.dark #spectra-commitments-chart-wrapper .commitment-hub-text-main,
+body.dark #spectra-commitments-chart-wrapper .commitment-hub-text-main {
+    fill: #f8fafc !important;
+}
+
+.dark #spectra-commitments-chart-wrapper .commitment-hub-digit,
+html.dark #spectra-commitments-chart-wrapper .commitment-hub-digit,
+body.dark #spectra-commitments-chart-wrapper .commitment-hub-digit {
+    fill: #818cf8 !important;
+}
+
+.commitment-leader-line {
+    transition: stroke 0.2s ease;
+}
+
+.commitment-label-text {
+    font-family: inherit;
+    font-size: 12.5px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    transition: fill 0.2s ease;
+}
+
+/* Center text responsive & crisp font */
+.commitment-center-title {
+    font-family: inherit;
+    font-weight: 900;
+    text-transform: uppercase;
+}
+
+.commitment-center-digit {
+    font-family: inherit;
+    font-weight: 900;
+    line-height: 1;
+    filter: drop-shadow(0 2px 8px rgba(99, 102, 241, 0.3));
+}

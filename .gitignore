@@ -1,0 +1,21 @@
+# Dependencies
+node_modules/
+
+# Environment variables (local overrides only)
+# NOTE: .env is intentionally tracked because the Vercel deployment
+# uses it as a static fallback for Firebase config via fetch('/.env').
+# Only local override files are ignored.
+.env.local
+.env.production
+.env.development
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Agents
+.agents/
