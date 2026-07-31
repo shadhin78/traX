@@ -36,6 +36,7 @@ window.FirebaseService = {
     _saveDebounceTimer: null,
     _unsubscribeSnapshot: null,
     _authListeners: [],
+    _firestoreInitialized: false,
 
     // 1. Fetch Firebase Configuration from API, fallback to .env or cached settings
     fetchConfig: async function() {
@@ -144,12 +145,15 @@ window.FirebaseService = {
                 }
                 if (typeof firebase.firestore === 'function') {
                     AppState.db = firebase.firestore();
-                    try {
-                        AppState.db.settings({
-                            experimentalAutoDetectLongPolling: true
-                        });
-                    } catch (e) {
-                        console.warn("Could not set Firestore settings:", e);
+                    if (!this._firestoreInitialized) {
+                        try {
+                            AppState.db.settings({
+                                experimentalAutoDetectLongPolling: true
+                            });
+                            this._firestoreInitialized = true;
+                        } catch (e) {
+                            console.warn("Could not set Firestore settings:", e);
+                        }
                     }
                 }
                 console.log("Firebase initialized successfully.");
@@ -167,7 +171,7 @@ window.FirebaseService = {
         if (window.location.protocol === 'file:') {
             console.log("Firebase login mocked under file:// protocol.");
             if (cleanEmail === 'ris2k29@gmail.com' && password === '787898') {
-                const localUser = { email: 'ris2k29@gmail.com', uid: 'mock-local-user-id', displayName: 'ris2k29 (Local)' };
+                const localUser = { email: 'ris2k29@gmail.com', uid: 'file_protocol_local_user', displayName: 'ris2k29 (Local)' };
                 safeStorage.setItem('local_auth_user', JSON.stringify(localUser));
                 this._notifyAuthListeners(localUser);
                 return { user: localUser };
@@ -179,26 +183,20 @@ window.FirebaseService = {
             try {
                 await firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL);
                 const res = await firebase.auth().signInWithEmailAndPassword(cleanEmail, password);
-                safeStorage.removeItem('local_auth_user');
+                if (res && res.user) {
+                    const userObj = {
+                        email: res.user.email,
+                        uid: res.user.uid,
+                        displayName: res.user.displayName || res.user.email
+                    };
+                    safeStorage.setItem('local_auth_user', JSON.stringify(userObj));
+                    this._notifyAuthListeners(res.user);
+                }
                 return res;
             } catch (fbErr) {
                 console.warn("Firebase Auth sign-in failed:", fbErr);
-                if (cleanEmail === 'ris2k29@gmail.com' && password === '787898') {
-                    console.log("Falling back to local authentication for test credentials.");
-                    const localUser = { email: 'ris2k29@gmail.com', uid: 'mock-local-user-id', displayName: 'ris2k29' };
-                    safeStorage.setItem('local_auth_user', JSON.stringify(localUser));
-                    this._notifyAuthListeners(localUser);
-                    return { user: localUser };
-                }
                 throw fbErr;
             }
-        }
-
-        if (cleanEmail === 'ris2k29@gmail.com' && password === '787898') {
-            const localUser = { email: 'ris2k29@gmail.com', uid: 'mock-local-user-id', displayName: 'ris2k29' };
-            safeStorage.setItem('local_auth_user', JSON.stringify(localUser));
-            this._notifyAuthListeners(localUser);
-            return { user: localUser };
         }
 
         throw { code: 'auth/wrong-password', message: 'Invalid email or password.' };
@@ -235,17 +233,20 @@ window.FirebaseService = {
 
     // 5. Expose current authenticated user reference
     getCurrentUser: function() {
-        if (window.location.protocol === 'file:') {
-            return { email: 'ris2k29@gmail.com', uid: 'mock-local-user-id', displayName: 'ris2k29 (Local)' };
-        }
         if (typeof firebase !== 'undefined' && firebase.auth && firebase.auth().currentUser) {
             return firebase.auth().currentUser;
         }
         const cached = safeStorage.getItem('local_auth_user');
         if (cached) {
             try {
-                return JSON.parse(cached);
+                const user = JSON.parse(cached);
+                if (user && user.uid && user.uid !== 'mock-local-user-id') {
+                    return user;
+                }
             } catch(e) {}
+        }
+        if (window.location.protocol === 'file:') {
+            return { email: 'ris2k29@gmail.com', uid: 'file_protocol_local_user', displayName: 'ris2k29 (Local)' };
         }
         return null;
     },
@@ -256,11 +257,11 @@ window.FirebaseService = {
         this._authListeners.push(callback);
 
         if (window.location.protocol === 'file:') {
-            console.log("file:// protocol detected in onAuthStateChanged. Emitting mock user.");
+            console.log("file:// protocol detected in onAuthStateChanged.");
             setTimeout(() => {
                 callback({
                     email: 'ris2k29@gmail.com',
-                    uid: 'mock-local-user-id',
+                    uid: 'file_protocol_local_user',
                     displayName: 'ris2k29 (Local)'
                 });
             }, 100);
@@ -269,15 +270,17 @@ window.FirebaseService = {
             };
         }
 
-        const localUser = this.getCurrentUser();
-
         if (typeof firebase !== 'undefined' && firebase.auth) {
             const unsubscribe = firebase.auth().onAuthStateChanged((user) => {
                 if (user) {
+                    safeStorage.setItem('local_auth_user', JSON.stringify({
+                        email: user.email,
+                        uid: user.uid,
+                        displayName: user.displayName || user.email
+                    }));
                     callback(user);
-                } else if (localUser) {
-                    callback(localUser);
                 } else {
+                    safeStorage.removeItem('local_auth_user');
                     callback(null);
                 }
             });
@@ -286,6 +289,7 @@ window.FirebaseService = {
                 if (typeof unsubscribe === 'function') unsubscribe();
             };
         } else {
+            const localUser = this.getCurrentUser();
             setTimeout(() => callback(localUser), 50);
             return () => {
                 this._authListeners = this._authListeners.filter(cb => cb !== callback);
@@ -295,14 +299,21 @@ window.FirebaseService = {
 
     // 7. Register Firestore Real-time Snapshot Listener
     startSnapshotListener: function(uid, onData, onError) {
-        if (!AppState.db || window.location.protocol === 'file:') {
-            console.warn("Firestore snapshot listener not active: DB null or offline mode.");
+        let activeUid = null;
+        if (typeof firebase !== 'undefined' && firebase.auth && firebase.auth().currentUser) {
+            activeUid = firebase.auth().currentUser.uid;
+        } else if (uid && uid !== 'mock-local-user-id') {
+            activeUid = uid;
+        }
+
+        if (!AppState.db || !activeUid || window.location.protocol === 'file:') {
+            console.warn("Firestore snapshot listener not active: DB null, unauthenticated user, or offline mode.");
             return function unsubscribe() {};
         }
 
         try {
-            console.log("Registering Firestore real-time snapshot listener for user:", uid);
-            const userDocRef = AppState.db.collection('users').doc(uid);
+            console.log("Registering Firestore real-time snapshot listener for user:", activeUid);
+            const userDocRef = AppState.db.collection('users').doc(activeUid);
             
             const unsubscribe = userDocRef.onSnapshot((docSnapshot) => {
                 if (docSnapshot.metadata && docSnapshot.metadata.hasPendingWrites) {
@@ -311,7 +322,7 @@ window.FirebaseService = {
 
                 if (docSnapshot.exists) {
                     const cloudData = docSnapshot.data();
-                    console.log("Real-time cloud snapshot received from Firestore.");
+                    console.log("Real-time cloud snapshot received from Firestore for UID:", activeUid);
                     showSync('saved');
                     if (typeof onData === 'function') {
                         onData(cloudData);
