@@ -1,6 +1,6 @@
 {
-  "name": "Project X",
-  "short_name": "Project X",
+  "name": "TraX",
+  "short_name": "TraX",
   "description": "Dynamic Multi-Track Execution & Tracking Dashboard",
   "start_url": "index.html",
   "scope": "./",
@@ -10,13 +10,13 @@
   "theme_color": "#2563eb",
   "icons": [
     {
-      "src": "icons/logo-x.png",
+      "src": "icons/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "icons/logo-x.png",
+      "src": "icons/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
