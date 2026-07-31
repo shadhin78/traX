@@ -33,6 +33,10 @@ function showSync(state) {
 }
 
 window.FirebaseService = {
+    _saveDebounceTimer: null,
+    _unsubscribeSnapshot: null,
+    _authListeners: [],
+
     // 1. Fetch Firebase Configuration from API, fallback to .env or cached settings
     fetchConfig: async function() {
         if (window.location.protocol === 'file:') {
@@ -55,7 +59,6 @@ window.FirebaseService = {
             if (!res.ok) throw new Error("API config endpoint not available");
             config = await res.json();
 
-            // Validate that the config contains the required apiKey
             if (!config || !config.apiKey) {
                 throw new Error("Invalid or empty configuration from API config endpoint");
             }
@@ -111,7 +114,7 @@ window.FirebaseService = {
                     } catch(e) {}
                 }
                 if (!config) {
-                    console.warn("Failed to load Firebase configuration, using offline fallback config.");
+                    console.log("Using offline fallback config.");
                     config = {
                         apiKey: "AIzaSyB3esen42Pqg2KzwSbn2N9Af_XpR90Z8Cw",
                         authDomain: "trax-76836.firebaseapp.com",
@@ -157,10 +160,7 @@ window.FirebaseService = {
         }
     },
 
-    // Internal auth state listeners array for local fallback triggers
-    _authListeners: [],
-
-    // 3. Authenticate with Email / Password with local fallback support
+    // 3. Authenticate with Email / Password
     login: async function(email, password) {
         const cleanEmail = (email || '').trim().toLowerCase();
 
@@ -175,7 +175,6 @@ window.FirebaseService = {
             throw { code: 'auth/wrong-password', message: 'Invalid email or password.' };
         }
 
-        // Try Firebase Authentication if SDK is loaded
         if (typeof firebase !== 'undefined' && firebase.auth) {
             try {
                 await firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL);
@@ -184,7 +183,6 @@ window.FirebaseService = {
                 return res;
             } catch (fbErr) {
                 console.warn("Firebase Auth sign-in failed:", fbErr);
-                // Fall back to local authentication for test credentials if Firebase auth/API key fails
                 if (cleanEmail === 'ris2k29@gmail.com' && password === '787898') {
                     console.log("Falling back to local authentication for test credentials.");
                     const localUser = { email: 'ris2k29@gmail.com', uid: 'mock-local-user-id', displayName: 'ris2k29' };
@@ -196,7 +194,6 @@ window.FirebaseService = {
             }
         }
 
-        // Fallback when Firebase SDK is not loaded or unreachable
         if (cleanEmail === 'ris2k29@gmail.com' && password === '787898') {
             const localUser = { email: 'ris2k29@gmail.com', uid: 'mock-local-user-id', displayName: 'ris2k29' };
             safeStorage.setItem('local_auth_user', JSON.stringify(localUser));
@@ -207,7 +204,6 @@ window.FirebaseService = {
         throw { code: 'auth/wrong-password', message: 'Invalid email or password.' };
     },
 
-    // Internal helper to notify auth listeners of manual auth changes
     _notifyAuthListeners: function(user) {
         if (this._authListeners && this._authListeners.length > 0) {
             this._authListeners.forEach(cb => {
@@ -218,6 +214,10 @@ window.FirebaseService = {
 
     // 4. Log out the current session
     logout: async function() {
+        if (this._unsubscribeSnapshot) {
+            try { this._unsubscribeSnapshot(); } catch(e) {}
+            this._unsubscribeSnapshot = null;
+        }
         safeStorage.removeItem('local_auth_user');
         this._notifyAuthListeners(null);
         if (window.location.protocol === 'file:') {
@@ -293,25 +293,79 @@ window.FirebaseService = {
         }
     },
 
-    // 7. Register Firestore Real-time Snapshot Listener (Disabled for memory-only mode)
+    // 7. Register Firestore Real-time Snapshot Listener
     startSnapshotListener: function(uid, onData, onError) {
-        return function unsubscribe() {};
+        if (!AppState.db || window.location.protocol === 'file:') {
+            console.warn("Firestore snapshot listener not active: DB null or offline mode.");
+            return function unsubscribe() {};
+        }
+
+        try {
+            console.log("Registering Firestore real-time snapshot listener for user:", uid);
+            const userDocRef = AppState.db.collection('users').doc(uid);
+            
+            const unsubscribe = userDocRef.onSnapshot((docSnapshot) => {
+                if (docSnapshot.metadata && docSnapshot.metadata.hasPendingWrites) {
+                    return;
+                }
+
+                if (docSnapshot.exists) {
+                    const cloudData = docSnapshot.data();
+                    console.log("Real-time cloud snapshot received from Firestore.");
+                    showSync('saved');
+                    if (typeof onData === 'function') {
+                        onData(cloudData);
+                    }
+                } else {
+                    console.log("No cloud document found for user. Initializing first cloud save.");
+                    this.saveToCloud(true);
+                }
+            }, (error) => {
+                console.error("Firestore onSnapshot error:", error);
+                showSync('error');
+                if (typeof onError === 'function') {
+                    onError(error);
+                }
+            });
+
+            return unsubscribe;
+        } catch (e) {
+            console.error("Failed to register snapshot listener:", e);
+            return function unsubscribe() {};
+        }
     },
 
-    // 8. Update in-memory AppState reference without external persistence
+    // 8. Save AppState to Cloud & Local Storage
     saveToCloud: async function(immediate = false) {
+        if (this._saveDebounceTimer) {
+            clearTimeout(this._saveDebounceTimer);
+            this._saveDebounceTimer = null;
+        }
+
+        showSync('saving');
+
+        if (immediate) {
+            await this._executeSave();
+        } else {
+            this._saveDebounceTimer = setTimeout(async () => {
+                await this._executeSave();
+            }, 800);
+        }
+    },
+
+    _executeSave: async function() {
         const payload = {
-            tasks: AppState.tasks,
-            tracks: window.tracks,
-            customSyllabus: window.syllabusStructure,
-            customPrograms: window.customPrograms,
-            customActions: window.customActions,
-            paceGoals: window.paceGoals,
-            passedItems: window.passedItems,
-            revisionData: window.revisionData,
+            tasks: AppState.tasks || [],
+            tracks: window.tracks || [],
+            customSyllabus: window.syllabusStructure || {},
+            customPrograms: window.customPrograms || {},
+            customActions: window.customActions || [],
+            paceGoals: window.paceGoals || [],
+            passedItems: window.passedItems || { programs: [], subjects: [] },
+            revisionData: window.revisionData || { active: [], progress: {} },
             programVisibility: window.programVisibility || {},
-            subjectTimeLinks: window.subjectTimeLinks,
-            successResults: window.successResults,
+            subjectTimeLinks: window.subjectTimeLinks || {},
+            successResults: window.successResults || [],
             timerLogs: window.timerLogs || [],
             dailyFocusHoursTarget: window.dailyFocusHoursTarget || 4.0,
             dailyFocusHoursTargetDate: window.dailyFocusHoursTargetDate || "",
@@ -320,7 +374,7 @@ window.FirebaseService = {
             timerAnalyticsGrouping: window.timerAnalyticsGrouping || 'daily',
             timerAnalyticsChartStyle: window.timerAnalyticsChartStyle || 'combo',
             subjectFocusTargets: window.subjectFocusTargets || {},
-            dashboardConfig: window.dashboardConfig,
+            dashboardConfig: window.dashboardConfig || {},
             weeklyTargetsDatabase: window.weeklyTargetsDatabase || {},
             dailyTargetsDatabase: window.dailyTargetsDatabase || {},
             scheduleBlocks: window.scheduleBlocks || [],
@@ -331,10 +385,45 @@ window.FirebaseService = {
             examRoutine: AppState.examRoutine || [],
             selectedCountdownExamId: AppState.selectedCountdownExamId || 'auto'
         };
+
+        // Cache state locally first for offline support
         window.appState = payload;
+        try {
+            safeStorage.setItem('local_app_state', JSON.stringify(payload));
+        } catch(e) {}
+
+        const user = this.getCurrentUser();
+        if (AppState.db && user && user.uid && window.location.protocol !== 'file:') {
+            try {
+                const cleanPayload = JSON.parse(JSON.stringify(payload));
+                if (typeof firebase !== 'undefined' && firebase.firestore && firebase.firestore.FieldValue) {
+                    cleanPayload.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
+                } else {
+                    cleanPayload.updatedAt = Date.now();
+                }
+
+                await AppState.db.collection('users').doc(user.uid).set(cleanPayload, { merge: true });
+                showSync('saved');
+            } catch (err) {
+                console.error("Firestore cloud save error:", err);
+                showSync('error');
+            }
+        } else {
+            showSync('saved');
+        }
     },
 
     wipeCloudWorkspace: async function() {
+        const user = this.getCurrentUser();
+        if (AppState.db && user && user.uid && window.location.protocol !== 'file:') {
+            try {
+                await AppState.db.collection('users').doc(user.uid).delete();
+                console.log("Firestore cloud workspace deleted.");
+            } catch(e) {
+                console.warn("Failed to delete Firestore cloud document:", e);
+            }
+        }
+        safeStorage.removeItem('local_app_state');
         console.log("Memory workspace wiped to clean slate.");
     },
 
@@ -342,35 +431,69 @@ window.FirebaseService = {
         if (window.TimerService && typeof window.TimerService.saveActiveStateToStore === 'function') {
             window.TimerService.saveActiveStateToStore();
         }
+        this.saveToCloud(true);
     },
 
-    // 9. Load fresh default workspace in memory without Cloud snapshot restoration
+    // 9. Load workspace from Cloud with real-time Firestore sync
     loadFromCloud: function() {
-        AppState.hasLoadedFromCloud = true;
-        if (typeof window.ensureConfigDefaults === 'function') window.ensureConfigDefaults();
-        if (typeof window.migrateLegacyData === 'function') window.migrateLegacyData();
-        if (typeof window.sortAllCustomData === 'function') window.sortAllCustomData();
-        if (typeof recalculateTotals === 'function') recalculateTotals();
+        const user = this.getCurrentUser();
 
-        if (AppState.isInitialLoad) {
-            window.dismissLoadingScreen();
-            if (typeof renderUI === 'function') renderUI();
-        } else {
-            requestAnimationFrame(() => {
-                const scrollPos = window.scrollY;
+        if (this._unsubscribeSnapshot) {
+            try { this._unsubscribeSnapshot(); } catch(e) {}
+            this._unsubscribeSnapshot = null;
+        }
+
+        const handleDataLoad = (data) => {
+            if (data) {
+                window.applyFullAppState(data, false);
+            }
+            AppState.hasLoadedFromCloud = true;
+            if (typeof window.ensureConfigDefaults === 'function') window.ensureConfigDefaults();
+            if (typeof window.migrateLegacyData === 'function') window.migrateLegacyData();
+            if (typeof window.sortAllCustomData === 'function') window.sortAllCustomData();
+            if (typeof recalculateTotals === 'function') recalculateTotals();
+
+            if (AppState.isInitialLoad) {
+                window.dismissLoadingScreen();
                 if (typeof renderUI === 'function') renderUI();
-                const activePage = document.querySelector('[id^="page-"]:not(.hidden)');
-                if (activePage) {
-                    const activePageId = activePage.id.replace('page-', '');
-                    if (activePageId && activePageId !== 'dashboard' && typeof window.switchPage === 'function') {
-                        window.switchPage(activePageId);
+            } else {
+                requestAnimationFrame(() => {
+                    const scrollPos = window.scrollY;
+                    if (typeof renderUI === 'function') renderUI();
+                    const activePage = document.querySelector('[id^="page-"]:not(.hidden)');
+                    if (activePage) {
+                        const activePageId = activePage.id.replace('page-', '');
+                        if (activePageId && activePageId !== 'dashboard' && typeof window.switchPage === 'function') {
+                            window.switchPage(activePageId);
+                        }
                     }
+                    window.scrollTo(0, scrollPos);
+                });
+            }
+        };
+
+        if (AppState.db && user && user.uid && window.location.protocol !== 'file:') {
+            this._unsubscribeSnapshot = this.startSnapshotListener(user.uid, (cloudData) => {
+                handleDataLoad(cloudData);
+            }, (err) => {
+                console.warn("Falling back to local storage due to Firestore listener error:", err);
+                const localData = safeStorage.getItem('local_app_state');
+                if (localData) {
+                    try { handleDataLoad(JSON.parse(localData)); } catch(e) { handleDataLoad(null); }
+                } else {
+                    handleDataLoad(null);
                 }
-                window.scrollTo(0, scrollPos);
             });
+        } else {
+            const localData = safeStorage.getItem('local_app_state');
+            if (localData) {
+                try { handleDataLoad(JSON.parse(localData)); } catch(e) { handleDataLoad(null); }
+            } else {
+                handleDataLoad(null);
+            }
         }
     }
-};;
+};
 
 window.dismissLoadingScreen = function() {
     if (window.setLoadingProgress) window.setLoadingProgress(100, 'Workspace ready!');
@@ -387,7 +510,8 @@ window.dismissLoadingScreen = function() {
 };
 
 // Global compatibility aliases
-window.saveToCloud = window.FirebaseService.saveToCloud;
-window.loadFromCloud = window.FirebaseService.loadFromCloud;
-window.saveTimerToCloud = window.FirebaseService.saveTimerToCloud;
+window.saveToCloud = window.FirebaseService.saveToCloud.bind(window.FirebaseService);
+window.loadFromCloud = window.FirebaseService.loadFromCloud.bind(window.FirebaseService);
+window.saveTimerToCloud = window.FirebaseService.saveTimerToCloud.bind(window.FirebaseService);
 window.showSync = showSync;
+

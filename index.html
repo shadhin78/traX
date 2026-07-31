@@ -124,6 +124,14 @@
                             </div>
                         </div>
 
+                        <!-- Sync Status Indicator Pill -->
+                        <div id="sync-status" class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/50 opacity-0 scale-95 transition-all duration-300 pointer-events-none shrink-0">
+                            <svg id="sync-icon" class="w-3 h-3 text-blue-500 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                            </svg>
+                            <span id="sync-text" class="text-[9px] font-black uppercase tracking-widest text-blue-500">Saved</span>
+                        </div>
+
                         <!-- Close button for mobile -->
                         <button onclick="window.closeMobileSidebar()"
                             class="md:hidden p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 bg-slate-100 dark:bg-slate-800 rounded-xl transition-all active:scale-95 shrink-0">
