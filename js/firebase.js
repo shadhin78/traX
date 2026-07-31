@@ -389,7 +389,9 @@ window.FirebaseService = {
         // Cache state locally first for offline support
         window.appState = payload;
         try {
-            safeStorage.setItem('local_app_state', JSON.stringify(payload));
+            const jsonStr = JSON.stringify(payload);
+            safeStorage.setItem('local_app_state', jsonStr);
+            safeStorage.setItem('appState', jsonStr);
         } catch(e) {}
 
         const user = this.getCurrentUser();
@@ -424,6 +426,7 @@ window.FirebaseService = {
             }
         }
         safeStorage.removeItem('local_app_state');
+        safeStorage.removeItem('appState');
         console.log("Memory workspace wiped to clean slate.");
     },
 
@@ -441,6 +444,17 @@ window.FirebaseService = {
         if (this._unsubscribeSnapshot) {
             try { this._unsubscribeSnapshot(); } catch(e) {}
             this._unsubscribeSnapshot = null;
+        }
+
+        // Synchronously hydrate cached state first for instant data display on refresh
+        const cachedStr = safeStorage.getItem('local_app_state') || safeStorage.getItem('appState');
+        if (cachedStr) {
+            try {
+                const cachedData = JSON.parse(cachedStr);
+                if (cachedData) window.applyFullAppState(cachedData, false);
+            } catch (e) {
+                console.warn("Failed to parse cached local app state:", e);
+            }
         }
 
         const handleDataLoad = (data) => {
@@ -477,7 +491,7 @@ window.FirebaseService = {
                 handleDataLoad(cloudData);
             }, (err) => {
                 console.warn("Falling back to local storage due to Firestore listener error:", err);
-                const localData = safeStorage.getItem('local_app_state');
+                const localData = safeStorage.getItem('local_app_state') || safeStorage.getItem('appState');
                 if (localData) {
                     try { handleDataLoad(JSON.parse(localData)); } catch(e) { handleDataLoad(null); }
                 } else {
@@ -485,7 +499,7 @@ window.FirebaseService = {
                 }
             });
         } else {
-            const localData = safeStorage.getItem('local_app_state');
+            const localData = safeStorage.getItem('local_app_state') || safeStorage.getItem('appState');
             if (localData) {
                 try { handleDataLoad(JSON.parse(localData)); } catch(e) { handleDataLoad(null); }
             } else {
