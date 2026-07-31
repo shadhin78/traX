@@ -38,12 +38,12 @@ window.FirebaseService = {
         if (window.location.protocol === 'file:') {
             console.log("file:// protocol detected in fetchConfig. Using offline fallback config.");
             return {
-                apiKey: "AIzaSyCLBC8EbRf7rgfOzy7LnpTMSeL0LRAaa1s",
-                authDomain: "project-x-29.firebaseapp.com",
-                projectId: "project-x-29",
-                storageBucket: "project-x-29.firebasestorage.app",
-                messagingSenderId: "671463039667",
-                appId: "1:671463039667:web:a93f66bd192f00f56206c6"
+                apiKey: "AIzaSyB3esen42Pqg2KzwSbn2N9Af_XpR90Z8Cw",
+                authDomain: "trax-76836.firebaseapp.com",
+                projectId: "trax-76836",
+                storageBucket: "trax-76836.firebasestorage.app",
+                messagingSenderId: "451643537797",
+                appId: "1:451643537797:web:ccd35df69ff56e3320ecec"
             };
         }
 
@@ -104,7 +104,7 @@ window.FirebaseService = {
                 if (cachedConfig) {
                     try {
                         const parsed = JSON.parse(cachedConfig);
-                        if (parsed && parsed.projectId === 'project-x-29') {
+                        if (parsed && parsed.projectId === 'trax-76836') {
                             config = parsed;
                             console.log("Loaded Firebase config from localStorage cache for offline boot.");
                         }
@@ -113,12 +113,12 @@ window.FirebaseService = {
                 if (!config) {
                     console.warn("Failed to load Firebase configuration, using offline fallback config.");
                     config = {
-                        apiKey: "AIzaSyCLBC8EbRf7rgfOzy7LnpTMSeL0LRAaa1s",
-                        authDomain: "project-x-29.firebaseapp.com",
-                        projectId: "project-x-29",
-                        storageBucket: "project-x-29.firebasestorage.app",
-                        messagingSenderId: "671463039667",
-                        appId: "1:671463039667:web:a93f66bd192f00f56206c6"
+                        apiKey: "AIzaSyB3esen42Pqg2KzwSbn2N9Af_XpR90Z8Cw",
+                        authDomain: "trax-76836.firebaseapp.com",
+                        projectId: "trax-76836",
+                        storageBucket: "trax-76836.firebasestorage.app",
+                        messagingSenderId: "451643537797",
+                        appId: "1:451643537797:web:ccd35df69ff56e3320ecec"
                     };
                     safeStorage.setItem('firebaseConfig', JSON.stringify(config));
                 }
