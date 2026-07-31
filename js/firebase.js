@@ -147,8 +147,8 @@ window.FirebaseService = {
                     AppState.db = firebase.firestore();
                     if (!this._firestoreInitialized) {
                         try {
-                            AppState.db.settings({
-                                experimentalAutoDetectLongPolling: true
+                            AppState.db.enablePersistence({ synchronizeTabs: true }).catch(err => {
+                                console.warn("Firestore persistence notice:", err.code);
                             });
                             this._firestoreInitialized = true;
                         } catch (e) {
@@ -368,7 +368,8 @@ window.FirebaseService = {
         const payload = {
             tasks: AppState.tasks || [],
             tracks: window.tracks || [],
-            customSyllabus: window.syllabusStructure || {},
+            customSyllabus: AppState.syllabusStructure || window.syllabusStructure || {},
+            syllabusStructure: AppState.syllabusStructure || window.syllabusStructure || {},
             customPrograms: window.customPrograms || {},
             customActions: window.customActions || [],
             paceGoals: window.paceGoals || [],
@@ -394,7 +395,10 @@ window.FirebaseService = {
             fiscalLedger: AppState.fiscalLedger || { transactions: [], budgets: [], vaults: [] },
             examSessions: AppState.examSessions || [],
             examRoutine: AppState.examRoutine || [],
-            selectedCountdownExamId: AppState.selectedCountdownExamId || 'auto'
+            selectedCountdownExamId: AppState.selectedCountdownExamId || 'auto',
+            activeTimerState: AppState.activeTimerState || {},
+            activeRoutineSet: AppState.activeRoutineSet || 1,
+            subjectColors: AppState.subjectColors || {}
         };
 
         // Cache state locally first for offline support
@@ -442,9 +446,6 @@ window.FirebaseService = {
     },
 
     saveTimerToCloud: async function() {
-        if (window.TimerService && typeof window.TimerService.saveActiveStateToStore === 'function') {
-            window.TimerService.saveActiveStateToStore();
-        }
         this.saveToCloud(true);
     },
 
@@ -471,6 +472,11 @@ window.FirebaseService = {
         const handleDataLoad = (data) => {
             if (data) {
                 window.applyFullAppState(data, false);
+                try {
+                    const jsonStr = JSON.stringify(data);
+                    safeStorage.setItem('local_app_state', jsonStr);
+                    safeStorage.setItem('appState', jsonStr);
+                } catch (e) {}
             }
             AppState.hasLoadedFromCloud = true;
             if (typeof window.ensureConfigDefaults === 'function') window.ensureConfigDefaults();

@@ -113,6 +113,7 @@ window.AppState = {
     examRoutine: [],
     selectedCountdownExamId: 'auto',
     syllabusStructure: {},
+    customSyllabus: {},
     customPrograms: {},
     programVisibility: {},
     weeklyTargetsDatabase: {},
@@ -141,7 +142,7 @@ const stateKeys = [
     'globalStartDate', 'globalEndDate', 'dynamicLineColors', 'isInitialLoad',
     'currentFilter', 'PLAN_START_DATE', 'PLAN_END_DATE', 'showSync', 'serverTimeOffset',
     'fiscalLedger', 'examSessions', 'examRoutine', 'selectedCountdownExamId',
-    'syllabusStructure', 'customPrograms', 'programVisibility', 'weeklyTargetsDatabase',
+    'syllabusStructure', 'customSyllabus', 'customPrograms', 'programVisibility', 'weeklyTargetsDatabase',
     'dailyTargetsDatabase', 'scheduleBlocks', 'scheduleBlocks2', 'scheduleGroups',
     'hasLoadedFromCloud'
 ];
@@ -165,7 +166,11 @@ window.applyFullAppState = function(data, saveCloud = true) {
 
     if (data.tasks) AppState.tasks = data.tasks;
     if (data.tracks) AppState.tracks = data.tracks;
-    if (data.customSyllabus || data.syllabusStructure) AppState.syllabusStructure = data.customSyllabus || data.syllabusStructure;
+    if (data.customSyllabus || data.syllabusStructure) {
+        const syl = data.syllabusStructure || data.customSyllabus;
+        AppState.syllabusStructure = syl;
+        AppState.customSyllabus = syl;
+    }
     if (data.customPrograms) AppState.customPrograms = data.customPrograms;
     if (data.customActions) AppState.customActions = data.customActions;
     if (data.paceGoals) AppState.paceGoals = data.paceGoals;
@@ -178,6 +183,9 @@ window.applyFullAppState = function(data, saveCloud = true) {
     if (data.dailyFocusHoursTarget !== undefined) AppState.dailyFocusHoursTarget = data.dailyFocusHoursTarget;
     if (data.dailyFocusHoursTargetDate !== undefined) AppState.dailyFocusHoursTargetDate = data.dailyFocusHoursTargetDate;
     if (data.dailyFocusHoursTargetHistory !== undefined) AppState.dailyFocusHoursTargetHistory = data.dailyFocusHoursTargetHistory;
+    if (data.timerAnalyticsRange !== undefined) AppState.timerAnalyticsRange = data.timerAnalyticsRange;
+    if (data.timerAnalyticsGrouping !== undefined) AppState.timerAnalyticsGrouping = data.timerAnalyticsGrouping;
+    if (data.timerAnalyticsChartStyle !== undefined) AppState.timerAnalyticsChartStyle = data.timerAnalyticsChartStyle;
     if (data.subjectFocusTargets) AppState.subjectFocusTargets = data.subjectFocusTargets;
     if (data.dashboardConfig) AppState.dashboardConfig = data.dashboardConfig;
     if (data.weeklyTargetsDatabase) AppState.weeklyTargetsDatabase = data.weeklyTargetsDatabase;
@@ -189,6 +197,9 @@ window.applyFullAppState = function(data, saveCloud = true) {
     if (data.examSessions) AppState.examSessions = data.examSessions;
     if (data.examRoutine) AppState.examRoutine = data.examRoutine;
     if (data.selectedCountdownExamId) AppState.selectedCountdownExamId = data.selectedCountdownExamId;
+    if (data.activeTimerState) AppState.activeTimerState = data.activeTimerState;
+    if (data.activeRoutineSet !== undefined) AppState.activeRoutineSet = data.activeRoutineSet;
+    if (data.subjectColors) AppState.subjectColors = data.subjectColors;
 
     if (typeof window.recalculateTotals === 'function') window.recalculateTotals();
     if (typeof window.renderUI === 'function') window.renderUI();

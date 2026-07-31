@@ -17559,7 +17559,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
 
-        if (user.email !== 'ris2k29@gmail.com') {
+        const userEmail = (user.email || '').trim().toLowerCase();
+        if (userEmail !== 'ris2k29@gmail.com') {
             FirebaseService.logout().then(() => {
                 window.location.href = 'login.html?error=denied';
             });
@@ -17627,16 +17628,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             showToast('Project X Installed Successfully!', 'success');
         }
     });
-
-    // Clear existing service workers and caches from existing users
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.getRegistrations().then(registrations => {
-            registrations.forEach(registration => registration.unregister());
-        });
-        caches.keys().then(names => {
-            names.forEach(name => caches.delete(name));
-        });
-    }
 });
 
 /******************************************************************
@@ -17681,7 +17672,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Route guard checking if user is already logged in as admin
     FirebaseService.onAuthStateChanged((user) => {
-        if (user && user.email === 'ris2k29@gmail.com') {
+        if (user && (user.email || '').trim().toLowerCase() === 'ris2k29@gmail.com') {
             window.location.href = 'index.html';
         }
     });
@@ -17701,7 +17692,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const userCredential = await FirebaseService.login(email, password);
             const user = userCredential.user;
 
-            if (user.email !== 'ris2k29@gmail.com') {
+            if ((user.email || '').trim().toLowerCase() !== 'ris2k29@gmail.com') {
                 await FirebaseService.logout();
                 showError("Access denied. Project X is private.");
                 btnSubmit.disabled = false;
@@ -17724,27 +17715,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             spinner.classList.add('hidden');
         }
     });
-
-    // Clear existing service workers and caches from existing users
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.getRegistrations().then(registrations => {
-            registrations.forEach(registration => registration.unregister());
-        });
-        caches.keys().then(names => {
-            names.forEach(name => caches.delete(name));
-        });
-    }
 });
-
-// Clear existing service workers and caches from existing users
-if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.getRegistrations().then(registrations => {
-        registrations.forEach(registration => registration.unregister());
-    });
-    caches.keys().then(names => {
-        names.forEach(name => caches.delete(name));
-    });
-}
 
 
 /* ===== Fiscal Ledger Module ===== */
